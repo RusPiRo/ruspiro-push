@@ -1,0 +1,25 @@
+[package]
+name = "cargo-ruspiro-push"
+authors = ["Andre Borrmann <pspwizard@gmx.de>"]
+version = "0.1.0" # remember to update html_root_url
+description = """
+Cargo tool to push new RusPiRo Kernel's from the development machine (PC) to the Raspberry Pi
+if connected through a serial port.
+"""
+license = "Apache-2.0"
+repository = "https://github.com/RusPiRo/ruspiro-push"
+documentation = "https://docs.rs/ruspiro-push/0.1.0"
+readme = "README.md"
+keywords = ["RusPiRo", "baremetal", "raspberrypi", "operations"]
+categories = ["cargo", "embedded"]
+edition = "2018"
+
+[[bin]]
+name = "cargo-ruspiro-push"
+path = "./src/main.rs"
+
+[dependencies]
+clap = "2.33"
+serial = "0.4"
+
+[features]

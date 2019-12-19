@@ -1,0 +1,16 @@
+# build only master branch on commit's
+# all other branches build on PullRequest creation
+branches:
+  only:
+    - master
+
+language: rust
+
+rust:
+  - stable
+
+matrix:
+  fast_finish: true
+  include:
+    - name: "RusPiRo Cargo Push"
+      script: cargo build --release
