@@ -15,9 +15,9 @@ Once done you could call the tool like so:
 $> cargo ruspiro-publish -k <image_file> -p <serial_port>
 ```
 
-```console
-$> cargo help ruspiro-push
-Push Kernel to RPi 0.0.1
+```
+$> cargo ruspiro-push --help
+Push a kernel image to Raspberry Pi 0.1.0
 André Borrmann <pspwizard@gmx.de>
 Send kernel files to raspberry Pi running RusPiRo Bootloader
 
