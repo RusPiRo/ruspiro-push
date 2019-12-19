@@ -15,6 +15,10 @@ Once done you could call the tool like so:
 $> cargo ruspiro-publish -k <image_file> -p <serial_port>
 ```
 
+The target architecture will be derived from the filename. `kernel7.img` will be handled as Aarch32
+and `kernel8.img` will handled as Aarch64 target. For any other file name you need to provide the 
+desired target architecture of the kernel file to be transfered using the `-a` flag. Use the
+`--help` flag to see all available options for this command:
 ```
 $> cargo ruspiro-push --help
 Push a kernel image to Raspberry Pi 0.1.0
