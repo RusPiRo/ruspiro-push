@@ -155,5 +155,15 @@ fn send_kernel(port: &mut dyn SerialPort, data: Vec<u8>, aarch: u8) -> io::Resul
         }
     }
 
+    println!("mirroring");
+    // once the kernel was send echo all incoming uart stuff
+    let mut echo: [u8; 1] = [0];
+    loop {
+        match port.read(&mut echo) {
+            Ok(_) => print!("{}", echo[0] as char),
+            Err(_) => (),
+        }
+    }
+
     Ok(())
 }
