@@ -149,8 +149,12 @@ fn send_kernel(port: &mut dyn SerialPort, data: Vec<u8>, aarch: u8) -> io::Resul
         port.read(&mut ack)?;
         if &ack == b"ACK" {
             println!("Device acknowledged. Send kernel...");
-            port.write(&data)?; // send kernel binary
-                                // wait again for the acknowledge
+            for chunk in data.chunks(256) {
+                port.write(&chunk)?; // send a chank of kernel binary
+                print!("."); io::stdout().flush()?;
+            }
+            println!("");
+            // wait again for the acknowledge
             port.read(&mut ack)?;
             if &ack == b"ACK" {
                 println!("Kernel successfully sent");
@@ -158,7 +162,7 @@ fn send_kernel(port: &mut dyn SerialPort, data: Vec<u8>, aarch: u8) -> io::Resul
         }
     }
 
-    println!("mirroring");
+    println!("mirroring\n");
     // once the kernel was send echo all incoming uart stuff
     let mut echo: [u8; 1] = [0];
     loop {
