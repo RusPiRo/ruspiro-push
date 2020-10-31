@@ -16,6 +16,7 @@ use clap::{App, Arg, ArgMatches};
 use std::io;
 use std::time::Duration;
 use serial::prelude::*;
+use std::io::Write;
 
 fn main() {
     // define a command line parse matcher that defines this app and generates a
@@ -57,7 +58,7 @@ fn main() {
     };
 }
 
-fn push_kernel_to_uart(arguments: &ArgMatches) -> Result<(), &'static str> {
+fn push_kernel_to_uart(arguments: &ArgMatches) -> Result<(), String> {
     // get the kernel file from the arguments
     let kernel_file = arguments.value_of("kernel").unwrap();
     // get the port name from the arguments
@@ -81,9 +82,11 @@ fn push_kernel_to_uart(arguments: &ArgMatches) -> Result<(), &'static str> {
     let kernel_content =
         std::fs::read(kernel_file).map_err(|_| "unable to open the file specified")?;
     let mut port = serial::open(&com_port).map_err(|_| "unable to open serial port specified")?;
-    send_kernel(&mut port, kernel_content, aarch)
-        .map_err(|_| "unable to push kernel to the target hardware")?;
-    Ok(())
+    let res = send_kernel(&mut port, kernel_content, aarch)
+        .map_err(|x| {
+            format!("unable to push kernel to the target hardware ({})", x)
+        });
+    res
 }
 
 fn get_aarch_from_filename(filename: &str) -> Result<u8, &'static str> {
@@ -120,7 +123,7 @@ fn send_kernel(port: &mut dyn SerialPort, data: Vec<u8>, aarch: u8) -> io::Resul
 
     // set timeout to 0 to ensure we block until we have received the
     // data we are waiting for
-    port.set_timeout(Duration::from_millis(0))?;
+    port.set_timeout(Duration::from_millis(10_000))?;
 
     println!("Send kernel to device. Initiate with token...");
     let buf: Vec<u8> = b"DEADBEEF".to_vec();
@@ -146,8 +149,12 @@ fn send_kernel(port: &mut dyn SerialPort, data: Vec<u8>, aarch: u8) -> io::Resul
         port.read(&mut ack)?;
         if &ack == b"ACK" {
             println!("Device acknowledged. Send kernel...");
-            port.write(&data)?; // send kernel binary
-                                // wait again for the acknowledge
+            for chunk in data.chunks(256) {
+                port.write(&chunk)?; // send a chank of kernel binary
+                print!("."); io::stdout().flush()?;
+            }
+            println!("");
+            // wait again for the acknowledge
             port.read(&mut ack)?;
             if &ack == b"ACK" {
                 println!("Kernel successfully sent");
@@ -155,12 +162,12 @@ fn send_kernel(port: &mut dyn SerialPort, data: Vec<u8>, aarch: u8) -> io::Resul
         }
     }
 
-    println!("mirroring");
+    println!("mirroring\n");
     // once the kernel was send echo all incoming uart stuff
     let mut echo: [u8; 1] = [0];
     loop {
-        match port.read(&mut echo) {
-            Ok(_) => print!("{}", echo[0] as char),
+        match port.read_exact(&mut echo) {
+            Ok(_) => { print!("{}", echo[0] as char); io::stdout().flush()?; },
             Err(_) => (),
         }
     }
